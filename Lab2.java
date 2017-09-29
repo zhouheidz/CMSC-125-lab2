@@ -63,7 +63,7 @@ public class Lab2 {
 			return this.getSequence() == ((Process)process).getSequence();
 		}
 
-		public static void output(ArrayList processes) {
+		public static float output(ArrayList processes) {
 			float wt = 0;
 			float awt = 0;
 
@@ -77,30 +77,113 @@ public class Lab2 {
 			}
 			awt = awt/processes.size();
 			System.out.println("\nAWT: " + awt + "\n");
+			return awt;
 		}
 
-		public static void FCFS(ArrayList processes) {
+		public static float FCFS(ArrayList processes) {
 			System.out.println("FCFS");
-			output(processes);
+			return output(processes);
 		}
 
-		public static void SJF(ArrayList processes) {
+		public static float SJF(ArrayList processes) {
 			System.out.println("SJF");
 			Collections.sort(processes, Process.BurstComparator);
-			output(processes);
+			return output(processes);
 		}
 
-		public static void priority(ArrayList processes) {
+		public static float priority(ArrayList processes) {
 			System.out.println("PRIORITY");
 			Collections.sort(processes, Process.PriorityComparator);
-			output(processes);
+			return output(processes);
 		}
 
-		public static void SRPT(ArrayList processes) {
+		public static float SRPT(ArrayList processes) {
 			System.out.println("SRPT");
+			ArrayList srptprocess = new ArrayList<Process>();
+			LinkedList processq = new LinkedList<Process>();
+
+			int hasarrived = 0;
+			int timer = 0;
+			
+			do {
+				if(hasarrived < processes.size()) {
+					for(int i = 0; i < processes.size(); i++) {
+						if(((Process)processes.get(i)).arrival == timer) {
+							processq.add(((Process)processes.get(i)));
+							Collections.sort(processq, Process.BurstComparator);
+							hasarrived++;
+						}
+					}
+				}
+				if(srptprocess.size() == 0) {
+					srptprocess.add(new Process(((Process)processq.get(0)).sequence,
+						((Process)processes.get(0)).arrival, 1,
+						((Process)processes.get(0)).priority));
+				} else {
+					if(((Process)srptprocess.get(srptprocess.size()-1)).equals(((Process)processq.get(0)))) {
+						srptprocess.set(srptprocess.size()-1, new Process(((Process)processq.get(0)).sequence,
+							((Process)srptprocess.get(srptprocess.size()-1)).arrival,
+							((Process)srptprocess.get(srptprocess.size()-1)).burst+1,
+							((Process)srptprocess.get(srptprocess.size()-1)).priority));
+					} else {
+						srptprocess.add(new Process(((Process)processq.get(0)).sequence,
+							((Process)processes.get(0)).arrival, 1,
+							((Process)processes.get(0)).priority));
+					}
+				}
+
+				processq.set(0, new Process(((Process)processq.get(0)).sequence,
+					((Process)processq.get(0)).arrival,
+					((Process)processq.get(0)).burst-1,
+					((Process)processq.get(0)).priority));
+
+				if(((Process)processq.get(0)).burst == 0) {
+					processq.removeFirst();
+				}
+
+				timer++;
+			}while(processq.size() > 0);
+
+			for(int i = 0; i < srptprocess.size(); i++) {
+				System.out.print(((Process)srptprocess.get(i)).sequence);
+				if(i < srptprocess.size()-1) {
+					System.out.print(", ");
+				}
+			}
+			System.out.println();
+
+			float wt = 0;
+			float awt = 0;
+			int notfinal = 0;
+			int lastburst = 0;
+			int count = 0;
+			for(int i = 0; i < processes.size(); i++) {
+				count = count(srptprocess, (Process)processes.get(i));
+				notfinal = 0;				
+				wt = 0;
+				for(int j = 0; j < srptprocess.size(); j++) {
+					lastburst = ((Process)srptprocess.get(j)).burst;
+					wt+= lastburst;
+					if(((Process)srptprocess.get(j)).equals(((Process)processes.get(i)))) {
+						if(count > 1) {
+							notfinal+=((Process)srptprocess.get(j)).burst;
+							count--;
+						} else {
+							break;
+						}
+					}
+				}
+				wt = wt - ((Process)processes.get(i)).arrival - notfinal - lastburst;
+				awt+=wt;
+			}	
+			awt = awt/processes.size();
+			System.out.println("\nAWT: " + awt + "\n");
+
+			return awt;
+
 		}
 
-		public static void RR(ArrayList processes) {
+		public static float RR(ArrayList processes) {
 			System.out.println("RR");
 			ArrayList rrprocess = new ArrayList<Process>();
 
@@ -165,6 +248,7 @@ public class Lab2 {
 			}	
 			awt = awt/processes.size();
 			System.out.println("\nAWT: " + awt + "\n");			
+			return awt;
 		}
 
 	}
@@ -178,116 +262,126 @@ public class Lab2 {
 		}
 		return answer;
 	}
-
-	public static void copy(ArrayList processes, ArrayList processes2) {
-		processes2 = new ArrayList<Process>();
-		for(int i = 0; i < processes.size(); i++) {
-			processes2.add((Process)processes.get(i));
-		}
-	}
 	
 	public static void main(String[] args) {
+		BufferedReader br = null;
+		FileReader fr = null;
+		StringTokenizer st;
 
-		String[] options2 = {"Yes", "No"};
+		int sequence;
+		int arrival;
+		int burst;
+		int priority;
 
-		do {
+		float[] results = new float[5];
 
-			BufferedReader br = null;
-			FileReader fr = null;
-			StringTokenizer st;
+		try {
+			fr = new FileReader("process1.txt");
+			br = new BufferedReader(fr);
 
-			int sequence;
-			int arrival;
-			int burst;
-			int priority;
+			String line;
+			ArrayList processes = new ArrayList<Process>();
+			ArrayList processes2 = new ArrayList<Process>();
+
+			br.readLine();
+
+			while ((line = br.readLine()) != null) {
+
+				st = new StringTokenizer(line);
+
+				sequence = Integer.parseInt(st.nextToken());
+				arrival = Integer.parseInt(st.nextToken());
+				burst = Integer.parseInt(st.nextToken());
+				priority = Integer.parseInt(st.nextToken());
+
+				processes.add(new Process(sequence, arrival, burst, priority));
+				processes2.add(new Process(sequence, arrival, burst, priority));
+			}
+
+			int min = 0;
+
+			results[0] = Process.FCFS(processes2);
+			processes2 = new ArrayList<Process>();
+			for(int i = 0; i < processes.size(); i++) {
+				processes2.add((Process)processes.get(i));
+			}
+
+			results[1] = Process.SJF(processes2);
+			processes2 = new ArrayList<Process>();
+			for(int i = 0; i < processes.size(); i++) {
+				processes2.add((Process)processes.get(i));
+			}
+
+			if(results[min] > results[1]) {
+				min = 1;
+			}
+
+			results[2] = Process.priority(processes2);
+			processes2 = new ArrayList<Process>();
+			for(int i = 0; i < processes.size(); i++) {
+				processes2.add((Process)processes.get(i));
+			}
+
+			if(results[min] > results[2]) {
+				min = 2;
+			}
+			
+			results[3] = Process.SRPT(processes2);
+			processes2 = new ArrayList<Process>();
+			for(int i = 0; i < processes.size(); i++) {
+				processes2.add((Process)processes.get(i));
+			}
+
+			if(results[min] > results[3]) {
+				min = 3;
+			}
+			
+			results[4] = Process.RR(processes2);
+			if(results[min] > results[4]) {
+				min = 4;
+			}
+
+			System.out.print("\nThe fastest waiting time is " + results[min] + " by the ");
+
+			switch(min) {
+				case 0:
+					System.out.print("FCFS algorithm");
+					break;
+				case 1:
+					System.out.print("SJF algorithm");
+					break;
+				case 2:
+					System.out.print("Priority algorithm");
+					break;
+				case 3:
+					System.out.print("SRPT algorithm");
+					break;
+				case 4:
+					System.out.print("Round Robin algorithm");
+					break;
+			}
+
+
+		} catch (IOException e) {
+
+			e.printStackTrace();
+
+		} finally {
 
 			try {
-				fr = new FileReader(JOptionPane.showInputDialog("Filename: "));
-				// fr = new FileReader("process1.txt");
-				br = new BufferedReader(fr);
 
-				String line;
-				ArrayList processes = new ArrayList<Process>();
-				ArrayList processes2 = new ArrayList<Process>();
+				if (br != null)
+					br.close();
 
-				br.readLine();
+				if (fr != null)
+					fr.close();
 
-				while ((line = br.readLine()) != null) {
+			} catch (IOException ex) {
 
-					st = new StringTokenizer(line);
-
-					sequence = Integer.parseInt(st.nextToken());
-					arrival = Integer.parseInt(st.nextToken());
-					burst = Integer.parseInt(st.nextToken());
-					priority = Integer.parseInt(st.nextToken());
-
-					processes.add(new Process(sequence, arrival, burst, priority));
-					processes2.add(new Process(sequence, arrival, burst, priority));
-				}
-
-				int choice;
-				do {
-					String[] options = {"FCFS", "SJF", "Priority", "SRPT", "Round Robin"};
-					choice = JOptionPane.showOptionDialog(null, "Compute for which scheduling algorithm?", "", 
-						JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE, null, options, options[0]);
-
-					
-
-					switch(choice) {
-						case 0:
-							Process.FCFS(processes2);
-							break;
-						case 1:
-							Process.SJF(processes2);
-							break;
-						case 2:
-							Process.priority(processes2);
-							break;
-						case 3:
-							Process.SRPT(processes2);
-							break;
-						case 4:
-							Process.RR(processes2);
-							break;
-						default:
-							break;
-					}
-
-					processes2 = new ArrayList<Process>();
-					for(int i = 0; i < processes.size(); i++) {
-						processes2.add((Process)processes.get(i));
-					}
-
-				}while (JOptionPane.showOptionDialog(null, "Next Algorithm?", "", 
-					JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE, 
-					null, options2, options2[0]) == 0);
-
-					
-
-			} catch (IOException e) {
-
-				e.printStackTrace();
-
-			} finally {
-
-				try {
-
-					if (br != null)
-						br.close();
-
-					if (fr != null)
-						fr.close();
-
-				} catch (IOException ex) {
-
-					ex.printStackTrace();
-
-				}
+				ex.printStackTrace();
 
 			}
-		
-		}while (JOptionPane.showOptionDialog(null, "Next File?", "", 
-					JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE, 
-					null, options2, options2[0]) == 0);
+
+		}
 	}
 }
