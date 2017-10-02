@@ -75,8 +75,23 @@ public class Lab2 {
 					awt += wt;
 				}
 			}
+
+			System.out.println("\n");
+
+			wt = 0;
+			awt = 0;
+
+			for(int i = 0; i < processes.size(); i++) {
+				System.out.print(wt + "s");
+				wt+= ((Process)processes.get(i)).burst;
+				if(i < processes.size()-1) {
+					System.out.print(", ");
+					awt += wt;
+				}
+			}
+
 			awt = awt/processes.size();
-			System.out.println("\nAWT: " + awt + "\n");
+			System.out.println("\n\nAWT: " + awt + "s\n\n\n");
 			return awt;
 		}
 
@@ -150,10 +165,24 @@ public class Lab2 {
 					System.out.print(", ");
 				}
 			}
-			System.out.println();
+			System.out.println("\n");
 
 			float wt = 0;
 			float awt = 0;
+
+			for(int i = 0; i < srptprocess.size(); i++) {
+				System.out.print(wt + 's');
+				wt+= ((Process)srptprocess.get(i)).burst;
+				if(i < srptprocess.size()-1) {
+					System.out.print(", ");
+					awt += wt;
+				}
+			}
+
+			System.out.println();
+
+			wt = 0;
+			awt = 0;
 			int notfinal = 0;
 			int lastburst = 0;
 			int count = 0;
@@ -176,8 +205,9 @@ public class Lab2 {
 				wt = wt - ((Process)processes.get(i)).arrival - notfinal - lastburst;
 				awt+=wt;
 			}	
+
 			awt = awt/processes.size();
-			System.out.println("\nAWT: " + awt + "\n");
+			System.out.println("\nAWT: " + awt + "\n\n\n");
 
 			return awt;
 
@@ -222,11 +252,25 @@ public class Lab2 {
 					System.out.print(", ");
 				}
 			}
-			System.out.println();
+			System.out.println("\n");
 
-			int repeat;
 			float wt = 0;
 			float awt = 0;
+
+			for(int i = 0; i < rrprocess.size(); i++) {
+				System.out.print(wt + 's');
+				wt+= ((Process)rrprocess.get(i)).burst;
+				if(i < rrprocess.size()-1) {
+					System.out.print(", ");
+					awt += wt;
+				}
+			}
+
+			System.out.println("\n");
+
+			int repeat;
+			wt = 0;
+			awt = 0;
 			int repeat2;
 			int lastburst = 0;
 			for(int i = 0; i < processes.size(); i++) {
@@ -276,7 +320,7 @@ public class Lab2 {
 		float[] results = new float[5];
 
 		try {
-			fr = new FileReader("process1.txt");
+			fr = new FileReader("process2.txt");
 			br = new BufferedReader(fr);
 
 			String line;
